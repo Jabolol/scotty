@@ -3,7 +3,11 @@
 Beam me up to campus. Scotty is a menu bar app and `scotty` CLI for Carnegie Mellon's Campus VPN. It signs in through
 CMU single sign-on with Duo, routes only CMU traffic through the tunnel, and keeps your Andrew Kerberos ticket fresh.
 
-<img src="Images/terminal.png" alt="scotty in a terminal next to the Scotty menu" width="700">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="Images/terminal-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="Images/terminal-light.png">
+  <img src="Images/terminal-light.png" alt="scotty in a terminal next to the Scotty menu" width="700">
+</picture>
 
 ## Why
 
@@ -18,7 +22,11 @@ Scotty runs while I'm away and gives them a CLI that can.
   tickets to your SSH hosts.
 - Scripts and agents get the same access through `scotty`, so a Mac left running keeps reaching the clusters.
 
-<img src="Images/states.png" alt="The Scotty menu disconnected, waiting for sign-in, and connected with activity" width="700">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="Images/states-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="Images/states-light.png">
+  <img src="Images/states-light.png" alt="The Scotty menu disconnected, waiting for sign-in, and connected with activity" width="700">
+</picture>
 
 ## Install
 
