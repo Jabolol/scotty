@@ -52,7 +52,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
       + [.sectionTitle("Network"), NSMenuItem(row: network), .separator()]
       + [.sectionTitle("Kerberos"), NSMenuItem(row: ticket)]
       + connectedOnly
-      + [NSMenuItem(row: connections, isEnabled: false), .separator(), openAtLogin, quit]
+      + [NSMenuItem(row: connections), .separator(), openAtLogin, quit]
     statusItem.menu = menu
   }
 
@@ -74,7 +74,7 @@ final class StatusMenu: NSObject, NSMenuDelegate {
     }
     connections.enclosingMenuItem?.isHidden = !(isConnected && disclosure.state.isExpanded)
     openAtLogin.state = campus.opensAtLogin ? .on : .off
-    fitConnections(listing: min(campus.traffic.flows.count, ConnectionList.limit + 1))
+    fitConnections(listing: min(campus.traffic.flows.count, ConnectionList.visible))
   }
 
   private func fitConnections(listing count: Int) {
