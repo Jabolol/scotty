@@ -1,0 +1,81 @@
+#!/bin/bash
+set -euo pipefail
+
+readonly VPNC=/usr/local/libexec/scotty/vpnc-script
+readonly RESOLVERS=/etc/resolver
+readonly STATE=/var/run/scotty.state
+
+refuse() {
+  echo "scotty: $*, refusing a full tunnel" >&2
+  kill "$PPID"
+  exit 1
+}
+
+split_only() {
+  local i addr
+  ((${CISCO_SPLIT_INC:-0} > 0)) || refuse "server pushed no split routes"
+  for ((i = 0; i < CISCO_SPLIT_INC; i++)); do
+    addr=CISCO_SPLIT_INC_${i}_ADDR
+    [[ ${!addr} != 0.0.0.0 ]] || refuse "server pushed a default route"
+  done
+}
+
+routes() {
+  local i addr mask
+  for ((i = 0; i < ${CISCO_SPLIT_INC:-0}; i++)); do
+    addr=CISCO_SPLIT_INC_${i}_ADDR
+    mask=CISCO_SPLIT_INC_${i}_MASKLEN
+    printf '%s/%s\n' "${!addr}" "${!mask}"
+  done
+}
+
+zones() {
+  local route octets bits whole span first prefix i
+  echo cmu.edu
+  for route in $(routes); do
+    IFS=. read -ra octets <<<"${route%/*}"
+    bits=${route#*/}
+    whole=$(((bits + 7) / 8))
+    span=$((1 << (whole * 8 - bits)))
+    first=$((octets[whole - 1] & (256 - span)))
+    prefix=
+    for ((i = 0; i < whole - 1; i++)); do prefix="${octets[i]}.$prefix"; done
+    for ((i = first; i < first + span; i++)); do echo "$i.${prefix}in-addr.arpa"; done
+  done | sort -u
+}
+
+session() {
+  local name value lowest=0
+  while IFS='=' read -r name value; do
+    case $name in
+      X-CSTP-Session-Timeout | X-CSTP-Session-Timeout-Remaining | X-CSTP-Lease-Duration)
+        [[ $value =~ ^[0-9]+$ ]] && ((value > 0 && (lowest == 0 || value < lowest))) && lowest=$value
+        ;;
+    esac
+  done <<<"${CISCO_CSTP_OPTIONS:-}"
+  echo "$((lowest > 0 ? $(date +%s) + lowest : 0)) ${IDLE_TIMEOUT:-0}"
+}
+
+case $reason in
+  connect)
+    split_only
+    mkdir -p "$RESOLVERS"
+    for zone in $(zones); do
+      printf 'nameserver %s\n' ${INTERNAL_IP4_DNS:?server pushed no DNS} >"$RESOLVERS/$zone"
+    done
+    {
+      echo "$TUNDEV $INTERNAL_IP4_ADDRESS"
+      echo "$INTERNAL_IP4_DNS"
+      routes | xargs
+      session
+    } >"$STATE"
+    ;;
+  disconnect)
+    for zone in $(zones); do rm -f "$RESOLVERS/$zone"; done
+    rm -f "$STATE"
+    ;;
+esac
+
+unset INTERNAL_IP4_DNS INTERNAL_IP6_DNS CISCO_DEF_DOMAIN CISCO_SPLIT_DNS \
+  INTERNAL_IP6_ADDRESS INTERNAL_IP6_NETMASK CISCO_IPV6_SPLIT_INC CISCO_IPV6_SPLIT_EXC
+exec "$VPNC"

@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+readonly HOST=vpn.cmu.edu
+readonly OPENCONNECT=/opt/homebrew/bin/openconnect
+readonly ROUTES=/usr/local/libexec/scotty/routes
+readonly PIDFILE=/var/run/scotty.pid
+
+die() { printf 'error: %s\n' "$*" >&2; exit 1; }
+running() { [[ -f $PIDFILE && $(ps -p "$(<"$PIDFILE")" -o comm= 2>/dev/null) == */openconnect ]]; }
+
+up() {
+  [[ ${1:-} =~ ^[0-9A-Fa-f]{40}$ ]] || die "expected the server certificate SHA-1 as 40 hex digits"
+  ! running || die "already connected"
+  exec "$OPENCONNECT" --protocol=anyconnect --non-inter --cookie-on-stdin --servercert "$1" \
+    --script "$ROUTES" --background --pid-file "$PIDFILE" --syslog "$HOST"
+}
+
+down() {
+  [[ -f $PIDFILE ]] || die "not connected"
+  kill "$(<"$PIDFILE")"
+}
+
+case ${1:-} in
+  up)   up "${2:-}" ;;
+  down) down ;;
+  *)    die "usage: ${0##*/} up <cert-sha1> | down" ;;
+esac
