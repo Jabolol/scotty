@@ -5,7 +5,7 @@ struct NetworkRow: View {
   let state: RowState
 
   var body: some View {
-    HighlightableRow(state: state) {
+    HighlightableRow(isHighlighted: state.isHighlighted) {
       StatusBadge(isActive: campus.link != nil && !campus.isLoading) {
         if campus.isLoading {
           ProgressView().controlSize(.small)

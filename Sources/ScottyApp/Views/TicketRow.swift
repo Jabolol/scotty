@@ -5,7 +5,7 @@ struct TicketRow: View {
   let state: RowState
 
   var body: some View {
-    HighlightableRow(state: state) {
+    HighlightableRow(isHighlighted: state.isHighlighted) {
       StatusBadge(isActive: campus.ticket.map { $0.expires > .now } ?? false) {
         Image(systemName: "ticket.fill").font(.system(size: 11, weight: .semibold))
       }

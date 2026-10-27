@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HighlightableRow<Content: View>: View {
-  let state: RowState
+  let isHighlighted: Bool
   var height = MenuMetrics.rowHeight
   @ViewBuilder let content: Content
 
@@ -12,7 +12,7 @@ struct HighlightableRow<Content: View>: View {
       .padding(.vertical, 2)
       .background(
         RoundedRectangle(cornerRadius: MenuMetrics.highlightRadius, style: .continuous)
-          .fill(state.isHighlighted ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear))
+          .fill(isHighlighted ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear))
       )
       .padding(.horizontal, MenuMetrics.highlightInset)
   }

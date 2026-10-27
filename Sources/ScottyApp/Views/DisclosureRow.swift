@@ -5,7 +5,7 @@ struct DisclosureRow: View {
   let state: RowState
 
   var body: some View {
-    HighlightableRow(state: state, height: MenuMetrics.titleHeight) {
+    HighlightableRow(isHighlighted: state.isHighlighted, height: MenuMetrics.titleHeight) {
       Text(title).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
       Spacer()
       Image(systemName: "chevron.right")
